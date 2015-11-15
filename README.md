@@ -1,5 +1,7 @@
 # Mr Scratch
 ## Description
+Mr Scratch allows flexible management of temporary files and notes from your shell.
+
 Perhaps you work on a shared environment where you're sharing space with other users, and you want to ensure unimportant files don't clog up shared space.
 
 Or perhaps you want an area on your own hard drive where you can put short-term downloads or temporary files and know they won't hang around forever taking up your precious disk space.
