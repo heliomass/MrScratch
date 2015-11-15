@@ -112,7 +112,7 @@ EOF
 	echo "   $_crontab"
 	echo ''
 
-	if [ ! -f "~/.scratch_config" ]; then
+	if [ -f "~/.scratch_config" ]; then
 		echo 'WARNING: These changes will overwrite your existing settings!'
 	fi
 
