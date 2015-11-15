@@ -11,7 +11,7 @@ As a bonus, Mr Scratch supplies a daily scratch pad for you to jot down thoughts
 ## Setup
 To install, place the `mr_scratch` executable in your path, and run `mr_scratch setup`. The script will prompt you for information (you can just hit return to accept the defaults) and direct you on how to complete the setup.
 
-```shell
+```
 $ mr_scratch setup
 
 ##################################################
