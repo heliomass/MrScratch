@@ -1,0 +1,250 @@
+#!/bin/bash
+
+# Grab the name of the script itself
+script_name=${0##*/}
+
+# Open up today's scratchpad in vim
+do_pad () {
+
+	which vim > /dev/null
+	if [ $? -ne 0 ]; then
+		echo 'Vim not available.' >&2
+		exit 1
+	fi
+
+	vim $SCRATCH_DIR/scratchpad_$(date +%Y%m%d).txt
+
+	return $?
+
+}
+
+# Dump all scratchpads to the pager (usually it's 'less')
+do_dump () {
+
+	if [ -z "$PAGER" ]; then
+		echo 'Please set your PAGER environment variable.' >&2
+		return 1
+	fi
+
+	ls ${SCRATCH_DIR}/scratchpad_*.txt > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo 'No scratchpads available.'
+		exit 0
+	fi
+
+	cat ${SCRATCH_DIR}/scratchpad_*.txt | $PAGER
+
+	return $?
+
+}
+
+# For the cron, purge any files which haven't been touched in two weeks.
+do_purge () {
+
+	echo "Files in this directory are purged after $SCRATCH_EXPIRY days." > ${SCRATCH_DIR}/README
+
+	find $SCRATCH_DIR -type f -mtime +${SCRATCH_EXPIRY} -exec rm -rf {} ';' -print 2> /dev/null
+	find $SCRATCH_DIR -type d -empty -delete
+
+	return $?
+
+}
+
+# Sets everything up.
+do_setup () {
+
+	cat << EOF
+
+##################################################
+###                                            ###
+###              MR SCRATCH SETUP              ###
+###                                            ###
+##################################################
+
+We're going to set up the following:
+
+* The location of your scratch directory
+* How long files are kept before they're purged
+* Some command aliases for the scratchpad
+* A crontab to purge files past their keep-by date
+
+Please answer the following questions, and take
+any manual steps you are prompted for.
+
+Good luck :)
+
+##################################################
+
+EOF
+
+	# Scratch directory location.
+	local _scratch_dir
+	echo -n "Please choose a directory path for your scratch directory (defaults to $HOME/scratch) : "
+	read _scratch_dir
+	_scratch_dir=${_scratch_dir:-"$HOME/scratch"}
+
+	# How long before the purge?
+	local _scratch_expiry
+	while [ -z "$_scratch_expiry" ]; do
+		echo -n 'Please choose the expiry time for files in the scratch directory (in days, defaults to 14) : '
+		read _scratch_expiry
+		_scratch_expiry=${_scratch_expiry:-14}
+		if ! [[ $_scratch_expiry =~ ^[0-9]+$ ]]; then
+			_scratch_expry=
+			echo 'Please choose a value in days.'
+		fi
+	done
+
+	# Define the crontab.
+	local _crontab="05 * * * * /bin/bash -c 'source ~/.scratch_config; ${script_name} purge' > /dev/null 2>&1"
+
+	# Confirmations
+	echo ''
+	echo 'The following settings will be applied:'
+	if [ -d "$_scratch_dir" ]; then
+		echo "   Scratch directory:    $_scratch_dir"
+	else
+		echo "   Scratch directory:    $_scratch_dir (this directory will be created)"
+	fi
+	echo "   File expiry:          $_scratch_expiry days"
+	echo ''
+	echo 'The following crontab will need to be added to your setup:'
+	echo "   $_crontab"
+	echo ''
+
+	if [ ! -f "~/.scratch_config" ]; then
+		echo 'WARNING: These changes will overwrite your existing settings!'
+	fi
+
+	local _proceed
+	echo ''
+	echo -n 'Proceed? (y/N) : '
+	read _proceed
+	if [ "$_proceed" != 'Y' -a "$_proceed" != 'y' ]; then
+		echo 'Aborting.'
+		return 0
+	fi
+
+	mkdir -p $_scratch_dir
+	if [ $? -ne 0 ]; then
+		echo "Unable to create ${_scratch_dir}. Please either create it manually, or set SCRATCH_DIR to something else, then run this setup script again." >&2
+		return 1
+	fi
+
+	# Write out the configuration.
+	echo "export SCRATCH_DIR=$_scratch_dir" > ~/.scratch_config
+	echo "export SCRATCH_EXPIRY=$_scratch_expiry" >> ~/.scratch_config
+	echo 'alias scratch="cd $SCRATCH_DIR"' >> ~/.scratch_config
+	echo "alias scratchpad='${script_name} pad'" >> ~/.scratch_config
+	echo "alias scratchdump='${script_name} dump'" >> ~/.scratch_config
+
+	cat << EOF
+##################################################
+
+Congratulations! The setup process has completed.
+
+You'll need to take a few final steps before
+you're up and running:
+
+1) Please add the following line to your .bashrc,
+.profile or .zshrc:
+
+   source ~/.scratch_config
+
+2) Please manually add the following to your crontab
+to purge files older than $_scratch_expiry days:
+
+   $_crontab
+
+(note: if you don't know how to install a crontab,
+have a look here:
+https://help.ubuntu.com/community/CronHowto
+
+3) Restart your shell so you pick up the new
+settings
+
+##################################################
+EOF
+
+	return 0
+
+}
+
+errors=0
+
+# If we're setting up, jump straight to that now.
+if [ "$1" == 'setup' ]; then
+	shift
+	do_setup
+	exit $?
+fi
+
+if [ ! -f "$HOME/.scratch_config" ]; then
+	echo 'Scratch not setup. Please run: scratch setup' >&2
+	exit 1
+fi
+
+source $HOME/.scratch_config
+
+# We *must* have the following environment variables set
+if [ -z "$SCRATCH_DIR" -o -z "$SCRATCH_EXPIRY" ]; then
+	echo 'Please set SCRATCH_DIR and SCRATCH_EXPIRY in your environment.' >&2
+	echo 'These should be set in your ~/.scratch_config file, which you' >&2
+	echo 'need to source from your bashrc.' >&2
+	errors=1
+
+else
+
+	if [ ! -d "$SCRATCH_DIR" ]; then
+		echo "$SCRATCH_DIR does not exist."
+		errors=1
+	fi
+
+	# SCRATCH_EXPIRY
+	if ! [[ $SCRATCH_EXPIRY =~ ^[0-9]+$ ]]; then
+		echo 'SCRATCH_EXPIRY must be an integer value.' >&2
+		errors=1
+	fi
+
+fi
+
+if [ $# -eq 0 ]; then
+	echo 'Please launch Mr Scratch using one of the aliases' >&2
+	echo '(eg: scratch, scratchpad or scratchdump)' >&2
+	echo '' >&2
+	echo 'If you want to run setup again, run:' >&2
+	echo "   ${script_name} setup" >&2
+	exit 1
+fi
+
+# Abort if there were any environment issues
+if [ $errors -ne 0 ]; then
+	echo 'Please run '\''scratch setup'\'' again.' >&2
+	exit 1
+fi
+
+# If we get here, we're all set up!
+
+# Which command are we going to execute?
+
+case "$1" in
+	pad)
+		shift
+		do_pad
+		exit $?
+		;;
+	dump)
+		shift
+		do_dump
+		exit $?
+		;;
+	purge)
+		shift
+		do_purge
+		exit $?
+		;;
+	*)
+		echo "Unrecognised option '$1'." >&2
+		exit 1
+		;;
+esac
