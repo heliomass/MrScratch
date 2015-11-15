@@ -38,7 +38,7 @@ Please choose a directory path for your scratch directory (defaults to /Users/he
 Please choose the expiry time for files in the scratch directory (in days, defaults to 14) :
 
 The following settings will be applied:
-   Scratch directory:    /Users/heliomass/Scratch (this directory will be created)
+   Scratch directory:    /Users/heliomass/scratch (this directory will be created)
    File expiry:          14 days
 
 The following crontab will need to be added to your setup:
