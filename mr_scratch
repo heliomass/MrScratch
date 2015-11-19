@@ -96,7 +96,7 @@ EOF
 	done
 
 	# Define the crontab.
-	local _crontab="05 * * * * /bin/bash -c 'source ~/.scratch_config; ${script_name} purge' > /dev/null 2>&1"
+	local _crontab="05 * * * * /bin/bash -c 'source ~/.scratch_config; ${script_name} purge > /dev/null 2>&1'"
 
 	# Confirmations
 	echo ''

@@ -64,7 +64,7 @@ you're up and running:
 2) Please manually add the following to your crontab
 to purge files older than 14 days:
 
-   05 * * * * /bin/bash -c 'source ~/.scratch_config; mr_scratch purge' > /dev/null 2>&1
+   05 * * * * /bin/bash -c 'source ~/.scratch_config; mr_scratch purge > /dev/null 2>&1'
 
 (note: if you don't know how to install a crontab,
 have a look here:
