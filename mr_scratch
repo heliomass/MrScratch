@@ -46,6 +46,8 @@ do_purge () {
 	find $SCRATCH_DIR -type f -mtime +${SCRATCH_EXPIRY} -exec rm -rf {} ';' -print 2> /dev/null
 	find $SCRATCH_DIR -type d -empty -delete
 
+	rm -f $SCRATCH_DIR/cron_error.log
+
 	return $?
 
 }
@@ -96,7 +98,7 @@ EOF
 	done
 
 	# Define the crontab.
-	local _crontab="05 * * * * /bin/bash -c 'source ~/.scratch_config; ${script_name} purge > /dev/null 2>&1'"
+	local _crontab="05 * * * * /bin/bash -c 'source ~/.scratch_config; date > \$SCRATCH_DIR/cron_error.log 2>&1; ${script_name} purge >> \$SCRATCH_DIR/cron_error.log 2>&1'"
 
 	# Confirmations
 	echo ''

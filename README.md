@@ -44,7 +44,7 @@ The following settings will be applied:
    File expiry:          14 days
 
 The following crontab will need to be added to your setup:
-   05 * * * * /bin/bash -c 'source ~/.scratch_config; mr_scratch purge' > /dev/null 2>&1
+   05 * * * * /bin/bash -c 'source ~/.scratch_config; date > \$SCRATCH_DIR/cron_error.log 2>&1; mr_scratch purge >> \$SCRATCH_DIR/cron_error.log 2>&1'
 
 WARNING: These changes will overwrite your existing settings!
 
@@ -64,7 +64,7 @@ you're up and running:
 2) Please manually add the following to your crontab
 to purge files older than 14 days:
 
-   05 * * * * /bin/bash -c 'source ~/.scratch_config; mr_scratch purge > /dev/null 2>&1'
+   05 * * * * /bin/bash -c 'source ~/.scratch_config; date > \$SCRATCH_DIR/cron_error.log 2>&1; mr_scratch purge >> \$SCRATCH_DIR/cron_error.log 2>&1'
 
 (note: if you don't know how to install a crontab,
 have a look here:
@@ -86,3 +86,5 @@ To output the complete history of your scratch pad, just type `scratchdump`. The
 If you want to use the path to your scratch directory in your own scripts or aliases, it's kept in `$SCRATCH_DIR`.
 
 If you want to change your settings, you can just run `mr_scratch setup` again.
+
+If the crontab produces an error, you can see what the error was by inspecting `cron_error.log` in your scratch directory.
