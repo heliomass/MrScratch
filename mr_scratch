@@ -41,7 +41,12 @@ do_dump () {
 # For the cron, purge any files which haven't been touched in two weeks.
 do_purge () {
 
-	echo "Files in this directory are purged after $SCRATCH_EXPIRY days." > ${SCRATCH_DIR}/README
+
+	echo 'Mr Scratch' > ${SCRATCH_DIR}/README
+	echo '' >> ${SCRATCH_DIR}/README
+	echo "Files in this directory are purged after $SCRATCH_EXPIRY days." >> ${SCRATCH_DIR}/README
+	echo '' >> ${SCRATCH_DIR}/README
+	echo "Directory last purged on: $(date)" >> ${SCRATCH_DIR}/README
 
 	find $SCRATCH_DIR -type f -mtime +${SCRATCH_EXPIRY} -exec rm -rf {} ';' -print 2> /dev/null
 	find $SCRATCH_DIR -type d -empty -delete
