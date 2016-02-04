@@ -32,7 +32,7 @@ do_dump () {
 		exit 0
 	fi
 
-	find ${SCRATCH_DIR}/scratchpad_*.txt -printf "%f\n" | sort -r | xargs cat | less
+	find ${SCRATCH_DIR}/scratchpad_*.txt -printf "%f\n" | sort -r | xargs cat | $PAGER
 
 	return $?
 
