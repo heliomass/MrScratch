@@ -3,16 +3,23 @@
 # Grab the name of the script itself
 script_name=${0##*/}
 
-# Open up today's scratchpad in vim
+# Get the system editor, but for safety restrict it to known editors
+editor_app=${EDITOR:vim}
+if [ "$editor_app" != "vi" -a "$editor_app" != "vim" -a "$editor_app" != "nvim" -a "$editor_app" != "emacs" -a "$editor_app" != "nano" ]; then
+	echo "Unsafe setting for EDITOR environment variable. Falling back on vim for editing." >&2
+	editor_app='vim'
+fi
+
+# Open up today's scratchpad in the editor
 do_pad () {
 
-	which vim > /dev/null
+	which ${editor_app} > /dev/null
 	if [ $? -ne 0 ]; then
 		echo 'Vim not available.' >&2
 		exit 1
 	fi
 
-	vim $SCRATCH_DIR/scratchpad_$(date +%Y%m%d).txt
+	$editor_app $SCRATCH_DIR/scratchpad_$(date +%Y%m%d).txt
 
 	return $?
 
